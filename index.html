@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Alex Space Shooter // Terminal HUD</title>
+    <style>
+        body {
+            background-color: #05070b;
+            color: #00ff66;
+            font-family: 'Courier New', Courier, monospace;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+        
+        /* Panou de control stil HUD de rachetă */
+        .hud-header {
+            display: flex;
+            justify-content: space-between;
+            width: 800px;
+            margin-bottom: 10px;
+            font-size: 13px;
+            color: #00ffff;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            border-bottom: 1px dashed #00ffff33;
+            padding-bottom: 5px;
+        }
+
+        /* Canvas-ul jocului cu efect neon */
+        canvas.emscripten {
+            border: 2px solid #00ffff;
+            border-radius: 4px;
+            background-color: #000;
+            box-shadow: 0 0 25px rgba(0, 255, 255, 0.2);
+            outline: none;
+        }
+
+        /* Linie de terminal jos */
+        .terminal-footer {
+            margin-top: 12px;
+            font-size: 12px;
+            color: #484f58;
+            letter-spacing: 1px;
+        }
+
+        .terminal-footer span {
+            color: #238636;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header stil sistem NASA / Terminal -->
+    <div class="hud-header">
+        <span>[SYS_STATUS: SECURE]</span>
+        <span>ALEX_MISSION_CONTROL // C++ Wasm</span>
+        <span>[FPS: 60.0]</span>
+    </div>
+
+    <!-- Zona unde rulează jocul tău C++ -->
+    <canvas class="emscripten" id="canvas" oncontextmenu="event.preventDefault()" tabindex=-1></canvas>
+
+    <!-- Footer stil hakeresc -->
+    <div class="terminal-footer">
+        <span>root@alex-space-terminal:~#</span> ./launch_game.sh --vercel-live
+    </div>
+
+    <!-- Scriptul generat de Emscripten -->
+    <script type="text/javascript">
+        var Module = {
+            canvas: (function() { return document.getElementById('canvas'); })()
+        };
+    </script>
+    <script async type="text/javascript" src="index.js"></script>
+
+</body>
+</html>
