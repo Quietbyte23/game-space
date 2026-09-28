@@ -30,3 +30,20 @@ To build and run this project locally, you need the **Emscripten SDK** installed
    ```bash
    git clone [https://github.com/YOUR_USERNAME/space-shooter-cpp.git](https://github.com/YOUR_USERNAME/space-shooter-cpp.git)
    cd space-shooter-cpp
+Compile C++ to WebAssembly:
+Make sure your Emscripten environment is activated in your terminal, then run the compilation command to generate index.js and index.wasm:
+
+Bash
+emcc main.cpp -o index.js -s USE_GLFW=3 -s ASYNCIFY -O3 --shell-file index.html
+Run a local server:
+You can use any simple local server (like Python) to test the game in your browser:
+
+Bash
+python -m http.server 8000
+Open http://localhost:8000 in your browser.
+
+🌐 Live Demo
+Play the live demo directly in your browser via Vercel:
+👉 [https://game-space-wine.vercel.app/]
+
+Built with passion, code, and a touch of late-night engineering. 🌌
