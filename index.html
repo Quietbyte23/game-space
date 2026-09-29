@@ -2,15 +2,87 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Alex Space Shooter // C++ Wasm</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ORBIT-X // C++ Space Shooter Demo</title>
     <style>
-        body { background-color: #030712; color: #c9d1d9; font-family: monospace; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; }
-        canvas.emscripten { border: 2px solid #00f0ff; background-color: black; }
+        @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@500;700&display=swap');
+        :root { background-color: #030712; color: #c9d1d9; font-family: 'Share Tech Mono', monospace; }
+        body { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; overflow: hidden; }
+        .panel { background: #0b0f19; border: 1px solid #00f0ff; border-radius: 8px; padding: 20px; box-shadow: 0 0 25px rgba(0, 240, 255, 0.2); }
+        .header { display: flex; justify-content: space-between; width: 800px; margin-bottom: 12px; font-family: 'Orbitron', sans-serif; color: #00f0ff; font-size: 14px; }
+        canvas { display: block; border: 1px solid #1f2937; background: #000; border-radius: 4px; }
+        .footer { width: 800px; margin-top: 12px; font-size: 12px; color: #6b7280; display: flex; justify-content: space-between; }
+        .footer span { color: #00f0ff; }
     </style>
 </head>
 <body>
-    <canvas class="emscripten" id="canvas" oncontextmenu="event.preventDefault()" tabindex=-1></canvas>
-    <script type="text/javascript">var Module = { canvas: (function() { return document.getElementById('canvas'); })() };</script>
-    <script async type="text/javascript" src="index.js"></script>
+    <div class="panel">
+        <div class="header">
+            <span>🚀 ORBIT-X // C++ ENGINE HUD</span>
+            <span>SCORE: <strong id="sc" style="color:#00ff66">0</strong> | LIVES: <strong id="lv" style="color:#ff3366">3</strong></span>
+        </div>
+        <canvas id="gameCanvas" width="800" height="450"></canvas>
+        <div class="footer">
+            <div>MOVE: [ <span>A</span> / <span>D</span> ] | SHOOT: [ <span>SPACE</span> ] | RESTART: [ <span>R</span> ]</div>
+            <div style="color:#00ff66">● C++ REPO CORE LINKED</div>
+        </div>
+    </div>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        let score = 0, lives = 3, gameOver = false;
+        let player = { x: 380, y: 390, width: 36, height: 26, speed: 6 };
+        let bullets = [], meteors = [], keys = {};
+
+        window.addEventListener('keydown', e => {
+            keys[e.code] = true;
+            if (e.code === 'Space' && !gameOver) bullets.push({ x: player.x + 16, y: player.y, w: 4, h: 10, s: 9 });
+            if (e.code === 'KeyR' && gameOver) reset();
+        });
+        window.addEventListener('keyup', e => keys[e.code] = false);
+
+        function reset() { score = 0; lives = 3; gameOver = false; bullets = []; meteors = []; player.x = 380; loop(); }
+        setInterval(() => { if (!gameOver) meteors.push({ x: Math.random() * 760, y: -20, size: Math.random() * 20 + 15, speed: Math.random() * 2 + 1.5 }); }, 850);
+
+        function update() {
+            if (gameOver) return;
+            if ((keys['ArrowLeft'] || keys['KeyCode'] || keys['KeyA']) && player.x > 0) player.x -= player.speed;
+            if ((keys['ArrowRight'] || keys['KeyD']) && player.x < canvas.width - player.width) player.x += player.speed;
+
+            for (let i = bullets.length - 1; i >= 0; i--) {
+                bullets[i].y -= bullets[i].s;
+                if (bullets[i].y < 0) bullets.splice(i, 1);
+            }
+
+            for (let i = meteors.length - 1; i >= 0; i--) {
+                meteors[i].y += meteors[i].speed;
+                if (player.x < meteors[i].x + meteors[i].size && player.x + player.width > meteors[i].x && player.y < meteors[i].y + meteors[i].size && player.y + player.height > meteors[i].y) {
+                    meteors.splice(i, 1); lives--; if (lives <= 0) gameOver = true; continue;
+                }
+                for (let j = bullets.length - 1; j >= 0; j--) {
+                    if (bullets[j].x < meteors[i].x + meteors[i].size && bullets[j].x + bullets[j].w > meteors[i].x && bullets[j].y < meteors[i].y + meteors[i].size && bullets[j].y + bullets[j].h > meteors[i].y) {
+                        meteors.splice(i, 1); bullets.splice(j, 1); score += 10; break;
+                    }
+                }
+                if (meteors[i] && meteors[i].y > canvas.height) meteors.splice(i, 1);
+            }
+            document.getElementById('sc').innerText = score;
+            document.getElementById('lv').innerText = lives;
+        }
+
+        function draw() {
+            ctx.fillStyle = '#05070b'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#00f0ff'; ctx.beginPath(); ctx.moveTo(player.x + 18, player.y); ctx.lineTo(player.x, player.y + 26); ctx.lineTo(player.x + 36, player.y + 26); ctx.closePath(); ctx.fill();
+            ctx.fillStyle = '#00ff66'; for (let b of bullets) ctx.fillRect(b.x, b.y, b.w, b.h);
+            ctx.fillStyle = '#ff3366'; for (let m of meteors) ctx.fillRect(m.x, m.y, m.size, m.size);
+            if (gameOver) {
+                ctx.fillStyle = 'rgba(3,7,18,0.9)'; ctx.fillRect(0,0,canvas.width,canvas.height);
+                ctx.fillStyle = '#ff3366'; ctx.font = 'bold 28px sans-serif'; ctx.textAlign = 'center'; ctx.fillText('MISSION FAILED', canvas.width/2, canvas.height/2 - 15);
+                ctx.fillStyle = '#c9d1d9'; ctx.font = '14px monospace'; ctx.fillText(`FINAL SCORE: ${score} | PRESS [R] TO RETRY`, canvas.width/2, canvas.height/2 + 25);
+            }
+        }
+        function loop() { update(); draw(); if (!gameOver) requestAnimationFrame(loop); }
+        loop();
+    </script>
 </body>
 </html>
