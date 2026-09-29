@@ -2,81 +2,158 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Alex Space Shooter // Terminal HUD</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ORBIT-X // C++ Space Mission Control</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@500;700&display=swap');
+
+        :root {
+            --bg-color: #030712;
+            --panel-bg: #0b0f19;
+            --accent-cyan: #00f0ff;
+            --accent-green: #00ff66;
+            --accent-red: #ff3366;
+            --text-main: #c9d1d9;
+            --border-glow: rgba(0, 240, 255, 0.3);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
         body {
-            background-color: #05070b;
-            color: #00ff66;
-            font-family: 'Courier New', Courier, monospace;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'Share Tech Mono', monospace;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 100vh;
-            margin: 0;
+            min-height: 100vh;
             overflow: hidden;
-        }
-        
-        /* Panou de control stil HUD de rachetă */
-        .hud-header {
-            display: flex;
-            justify-content: space-between;
-            width: 800px;
-            margin-bottom: 10px;
-            font-size: 13px;
-            color: #00ffff;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            border-bottom: 1px dashed #00ffff33;
-            padding-bottom: 5px;
+            position: relative;
         }
 
-        /* Canvas-ul jocului cu efect neon */
-        canvas.emscripten {
-            border: 2px solid #00ffff;
+        /* Efect subtil de linii CRT (Retro Monitor) */
+        body::after {
+            content: " ";
+            display: block;
+            position: fixed;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+            z-index: 999;
+            background-size: 100% 3px, 3px 100%;
+            pointer-events: none;
+        }
+
+        /* Container principal tip panou de bord */
+        .mission-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: var(--panel-bg);
+            border: 1px solid var(--accent-cyan);
+            box-shadow: 0 0 20px var(--border-glow), inset 0 0 15px rgba(0, 240, 255, 0.05);
+            border-radius: 8px;
+            padding: 20px;
+            position: relative;
+        }
+
+        /* Antet NASA HUD */
+        .hud-header {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            border-bottom: 1px dashed rgba(0, 240, 255, 0.3);
+            padding-bottom: 10px;
+        }
+
+        .hud-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 16px;
+            color: var(--accent-cyan);
+            letter-spacing: 2px;
+            text-shadow: 0 0 8px rgba(0, 240, 255, 0.5);
+        }
+
+        .hud-status {
+            font-size: 12px;
+            color: var(--accent-green);
+            background: rgba(0, 255, 102, 0.1);
+            padding: 3px 8px;
             border-radius: 4px;
-            background-color: #000;
-            box-shadow: 0 0 25px rgba(0, 255, 255, 0.2);
+            border: 1px solid rgba(0, 255, 102, 0.3);
+        }
+
+        /* Zona Canvas unde rulează C++ prin Wasm */
+        .canvas-wrapper {
+            position: relative;
+            border: 1px solid #1f2937;
+            background: #000;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        canvas.emscripten {
+            display: block;
             outline: none;
         }
 
-        /* Linie de terminal jos */
-        .terminal-footer {
-            margin-top: 12px;
+        /* Panou de telemetrie / comenzi jos */
+        .hud-footer {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px;
             font-size: 12px;
-            color: #484f58;
-            letter-spacing: 1px;
+            color: #6b7280;
         }
 
-        .terminal-footer span {
-            color: #238636;
+        .controls-hint span {
+            color: var(--accent-cyan);
+            border: 1px solid rgba(0, 240, 255, 0.2);
+            padding: 2px 6px;
+            border-radius: 3px;
+            background: rgba(0, 240, 255, 0.05);
+        }
+
+        .terminal-log {
+            color: var(--accent-green);
         }
     </style>
 </head>
 <body>
 
-    <!-- Header stil sistem NASA / Terminal -->
-    <div class="hud-header">
-        <span>[SYS_STATUS: SECURE]</span>
-        <span>ALEX_MISSION_CONTROL // C++ Wasm</span>
-        <span>[FPS: 60.0]</span>
+    <div class="mission-container">
+        <!-- NASA / Cyberpunk HUD Header -->
+        <div class="hud-header">
+            <div class="hud-title">🚀 ORBIT-X // C++ ENGINE v1.0</div>
+            <div class="hud-status">● SYS_ONLINE</div>
+        </div>
+
+        <!-- Canvas Frame -->
+        <div class="canvas-wrapper">
+            <canvas class="emscripten" id="canvas" oncontextmenu="event.preventDefault()" tabindex=-1></canvas>
+        </div>
+
+        <!-- Footer / Controls Telemetry -->
+        <div class="hud-footer">
+            <div class="controls-hint">MOVE: [ <span>A</span> / <span>D</span> ] sau [ <span>◄</span> / <span>►</span> ]</div>
+            <div class="terminal-log">ROOT@WASM:~$ compiled successfully</div>
+        </div>
     </div>
 
-    <!-- Zona unde rulează jocul tău C++ -->
-    <canvas class="emscripten" id="canvas" oncontextmenu="event.preventDefault()" tabindex=-1></canvas>
-
-    <!-- Footer stil hakeresc -->
-    <div class="terminal-footer">
-        <span>root@alex-space-terminal:~#</span> ./launch_game.sh --vercel-live
-    </div>
-
-    <!-- Scriptul generat de Emscripten -->
+    <!-- Scriptul Emscripten care leagă codul tău C++ -->
     <script type="text/javascript">
         var Module = {
             canvas: (function() { return document.getElementById('canvas'); })()
         };
     </script>
     <script async type="text/javascript" src="index.js"></script>
-
 </body>
 </html>
